@@ -21,7 +21,7 @@
 
     // fixes weird safari 10 bug where preventDefault is prevented
     // @see https://github.com/metafizzy/flickity/issues/457#issuecomment-254501356
-    window.addEventListener('touchmove', function () {});
+    window.addEventListener('touchmove', function () {}, getPassiveArgs());
 
     var Impetus = function Impetus(_ref) {
         var _ref$source = _ref.source;
@@ -42,7 +42,7 @@
         var boundXmin, boundXmax, boundYmin, boundYmax, pointerLastX, pointerLastY, pointerCurrentX, pointerCurrentY, pointerId, decVelX, decVelY;
         var targetX = 0;
         var targetY = 0;
-        var stopThreshold = stopThresholdDefault * multiplier;
+        var stopThreshold = Math.abs(stopThresholdDefault * multiplier);
         var ticking = false;
         var pointerActive = false;
         var paused = false;
@@ -82,8 +82,8 @@
                 boundYmax = boundY[1];
             }
 
-            sourceEl.addEventListener('touchstart', onDown);
-            sourceEl.addEventListener('mousedown', onDown);
+            sourceEl.addEventListener('touchstart', onDown, getPassiveArgs());
+            sourceEl.addEventListener('mousedown', onDown, getPassiveArgs());
         })();
 
         /**
@@ -145,7 +145,7 @@
          */
         this.setMultiplier = function (val) {
             multiplier = val;
-            stopThreshold = stopThresholdDefault * multiplier;
+            stopThreshold = Math.abs(stopThresholdDefault * multiplier);
         };
 
         /**
@@ -173,10 +173,10 @@
          */
         function cleanUpRuntimeEvents() {
             // Remove all touch events added during 'onDown' as well.
-            document.removeEventListener('touchmove', onMove, getPassiveSupported() ? { passive: false } : false);
+            document.removeEventListener('touchmove', onMove, getNonPassiveArgs());
             document.removeEventListener('touchend', onUp);
             document.removeEventListener('touchcancel', stopTracking);
-            document.removeEventListener('mousemove', onMove, getPassiveSupported() ? { passive: false } : false);
+            document.removeEventListener('mousemove', onMove, getNonPassiveArgs());
             document.removeEventListener('mouseup', onUp);
         }
 
@@ -187,10 +187,10 @@
             cleanUpRuntimeEvents();
 
             // @see https://developers.google.com/web/updates/2017/01/scrolling-intervention
-            document.addEventListener('touchmove', onMove, getPassiveSupported() ? { passive: false } : false);
+            document.addEventListener('touchmove', onMove, getNonPassiveArgs());
             document.addEventListener('touchend', onUp);
             document.addEventListener('touchcancel', stopTracking);
-            document.addEventListener('mousemove', onMove, getPassiveSupported() ? { passive: false } : false);
+            document.addEventListener('mousemove', onMove, getNonPassiveArgs());
             document.addEventListener('mouseup', onUp);
         }
 
@@ -494,12 +494,20 @@
                 }
             });
 
-            window.addEventListener("test", null, options);
+            document.createElement("div").addEventListener("test", null, options);
         } catch (err) {}
 
         getPassiveSupported = function () {
             return passiveSupported;
         };
         return passiveSupported;
+    }
+
+    function getPassiveArgs() {
+        return getPassiveSupported() ? { passive: true } : undefined;
+    }
+
+    function getNonPassiveArgs() {
+        return getPassiveSupported() ? { passive: false } : false;
     }
 });
